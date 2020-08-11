@@ -1,5 +1,5 @@
 # teaching_popecology
-ejercicios de aplicación para temas de ecología y manejo de poblaciones
+Ejercicios de aplicación para temas de ecología y manejo de poblaciones
 usados en grado y posgrado, Argentina
 
 # Crecimiento poblacional.
