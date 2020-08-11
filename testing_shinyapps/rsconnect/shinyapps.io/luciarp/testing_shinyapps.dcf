@@ -1,0 +1,10 @@
+name: testing_shinyapps
+title:
+username:
+account: luciarp
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 2640181
+bundleId: 3473624
+url: https://luciarp.shinyapps.io/testing_shinyapps/
+when: 1596549717.44308
