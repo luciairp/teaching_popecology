@@ -123,14 +123,23 @@ server <- function(input, output, session) {
       rd <- 1-input$lambda
       
       
-      Nd = input$funciond(K = input$K, Nini = input$Nini, 
-                                    t = input$tiempos, lambda = input$lambda,
-                                    rd = input$rd)
-      Nent <- tibble(Nd,
-                     t = 1:(input$tiempos), 
-                     razonNd = numeric(input$tiempos))
+      if (input$funciond == "ricker"){ 
+        Nd <- ricker(K = input$K, Nini = input$Nini, 
+                     t = input$tiempos, lambda = input$lambda)
+      } else if (input$funciond == "BH") {
+        Nd <- BH(K = input$K, Nini = input$Nini, 
+                     t = input$tiempos, lambda = input$lambda)
+      } else if (input$funciond == "logdis") {
+        Nd <- logdis(K = input$K, Nini = input$Nini, 
+                     t = input$tiempos, rd = input$rd)
+      }
       
-      for(t in 1:input$tiempos) {Nent$razonNd[t]<-Nent$Nd[t+1]/Nent$Nd[t]}
+      
+      Nent <- tibble(Nd,
+                     t = 1:1+input$tiempos, 
+                     razonNd = numeric(1+input$tiempos))
+      
+      for(t in 1:1+input$tiempos) {Nent$razonNd[t]<-Nent$Nd[t+1]/Nent$Nd[t]}
       
       
       if (input$graphtyped == "A"){ 
