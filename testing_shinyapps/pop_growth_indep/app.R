@@ -31,8 +31,8 @@ parameter_tabs <- tabsetPanel(
 #### INTERFAZ DE USUARIO ####
 ui<- fluidPage(
   
-  h1(strong("EyMA2020")),
-  h4(em("Crecimiento densoindepeniente")),
+  h1(strong("Crecimiento densoindependiente")),
+  h4(em("por Lucía Rodríguez-Planes")),
   
   sidebarLayout(
     sidebarPanel(
