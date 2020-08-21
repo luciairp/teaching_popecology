@@ -59,18 +59,18 @@ parameter_tabs <- tabsetPanel(
                         choices = c("Ricker" = "ricker",
                                     "Beverton-Holt" = "BH",
                                     "logístico discreto" = "logdis")),
-           radioButtons("graphtyped", "Tipo de gráfico", selected = "a", 
-                        choices= c("Nd vs tiempo"= "a", 
-                                   "log(Nd) vs tiempo"= "b", 
-                                   "Nt+1/Nt vs Nt"= "c"))
+           radioButtons("graphtyped", "Tipo de gráfico", selected = "A", 
+                        choices= c("Nd vs tiempo"= "A", 
+                                   "log(Nd) vs tiempo"= "B", 
+                                   "Nt+1/Nt vs Nt"= "C"))
            
   ),
   tabPanel("continuo", id = "continuo",
            sliderInput('r', 'r', min=-2, max=2,
                        value=0, step=0.1),
-           radioButtons("funcionc","Modelo de crecimiento ", selected = "d",
-                        choices = c("logístico continuo" = "d",
-                                    "densodependencia zeta" = "e")),
+           radioButtons("funcionc","Modelo de crecimiento ", selected = "clogcont",
+                        choices = c("logístico continuo" = "clogcont",
+                                    "densodependencia zeta" = "zetacont")),
            sliderInput('zeta', 'zeta (solo para modelo con densodependencia zeta)',
                        min=-2, max=2, value=0, step=0.1),
            radioButtons("graphtypec", "Tipo de gráfico", selected = "D", 
@@ -120,8 +120,8 @@ server <- function(input, output, session) {
   datos <- reactive({
     
     if (input$params == "discreto"){ 
-      rd <- 1-input$lambda
-      
+     
+      #rd <- 1-input$lambda
       
       if (input$funciond == "ricker"){ 
         Nd <- ricker(K = input$K, Nini = input$Nini, 
@@ -131,16 +131,15 @@ server <- function(input, output, session) {
                      t = input$tiempos, lambda = input$lambda)
       } else if (input$funciond == "logdis") {
         Nd <- logdis(K = input$K, Nini = input$Nini, 
-                     t = input$tiempos, rd = input$rd)
+                     t = input$tiempos, rd = 1-input$lambda)
       }
       
-      
       Nent <- tibble(Nd,
-                     t = 1:1+input$tiempos, 
-                     razonNd = numeric(1+input$tiempos))
-      
-      for(t in 1:1+input$tiempos) {Nent$razonNd[t]<-Nent$Nd[t+1]/Nent$Nd[t]}
-      
+                     t =  1:(input$tiempos+1), 
+                     razonNd = numeric(input$tiempos+1))
+       
+      for(a in 1:input$tiempos+1) {Nent$razonNd[a]<-Nent$Nd[a+1]/Nent$Nd[a]}
+      Nent <- Nent[1:input$tiempos,]
       
       if (input$graphtyped == "A"){ 
         ejex <- Nent$t 
@@ -154,22 +153,37 @@ server <- function(input, output, session) {
       }
       
       datos <- tibble(ejex,ejey)
+      
     } else if (input$params == "continuo") {
       
-      Ncent<-ode(input$Nini,seq(1.0,input$tiempos,by=0.1),cexp,input$r)
-      Ncent <- as_tibble(Ncent) %>% 
-        mutate(logN = log(`1`))
+      
+      if (input$funciond == "clogcont"){ 
+        
+        Ncent<-ode(input$Nini,seq(1.0,input$tiempos,by=0.1),
+                   clogcont,parms=c(input$r,input$K))
+        Ncent <- tibble(tiempo = Ncent[,1],
+                        N = Ncent[,2]) 
+        Ncent <- mutate(Ncent, logN = log(N))
+        
+      } else if (input$funciond == "zetacont") {
+        
+        Ncent<-ode(input$Nini,seq(1.0,input$tiempos,by=0.1),
+                   zetacont,parms=c(input$r,input$K,input$zeta))
+        Ncent <- tibble(tiempo = Ncent[,1],
+                        N = Ncent[,2]) 
+        Ncent <- mutate(Ncent, logN = log(N))
+      } 
       
       if (input$graphtypec == "D"){ 
-        ejex <- Ncent$time 
-        ejey  <-  Ncent$`1`
+        ejex <- Ncent$tiempo 
+        ejey  <-  Ncent$N
       } else if (input$graphtypec == "E") {
-        ejex <-  Ncent$time 
+        ejex <-  Ncent$tiempo 
         ejey <- Ncent$logN
       }
+      
       datos <- tibble(ejex,ejey)
     }
-    
   })
   
   output$plot <- renderPlot({
