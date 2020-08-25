@@ -13,7 +13,7 @@ parameter_tabs <- tabsetPanel(
   type = "tabs",
   tabPanel("discreto", id = "discreto",
            sliderInput('lambda', 'lambda', min=0.1, max=5,
-                       value=1, step=0.1),
+                       value=1.2, step=0.1),
            radioButtons("graphtyped", "Tipo de gráfico", selected = "A", 
                         choices= c("Nd vs tiempo"= "A", 
                                    "log(Nd) vs tiempo"= "B", 
@@ -21,10 +21,11 @@ parameter_tabs <- tabsetPanel(
   ),
   tabPanel("continuo", id = "continuo",
            sliderInput('r', 'r', min=-2, max=2,
-                       value=0, step=0.1),
+                       value=0.2, step=0.1),
            radioButtons("graphtypec", "Tipo de gráfico", selected = "D", 
                         choices= c("Nc vs tiempo"= "D", 
-                                   "log(Nc) vs tiempo"= "E"))
+                                   "log(Nc) vs tiempo"= "E",
+                                   "dN/dt*1/N vs N" = "F"))
   )
 )
 
@@ -73,6 +74,8 @@ server <- function(input, output, session) {
       for(t in 2:input$tiempos) {Nent$Nd[t]<-input$lambda*Nent$Nd[t-1]}
       for(t in 1:input$tiempos) {Nent$razonNd[t]<-Nent$Nd[t+1]/Nent$Nd[t]}
       
+      Nent <- Nent[1:(input$tiempos-1),]
+      
       if (input$graphtyped == "A"){ 
         ejex <- Nent$t 
         ejey  <-  Nent$Nd
@@ -87,26 +90,38 @@ server <- function(input, output, session) {
       datos <- tibble(ejex,ejey)
     } else if (input$params == "continuo") {
       
-      Ncent<-ode(input$Nini,seq(1.0,input$tiempos,by=0.1),cexp,input$r)
-      Ncent <- as_tibble(Ncent) %>% 
-        mutate(logN = log(`1`))
+      resode<-ode(input$Nini,seq(1.0,input$tiempos,by=0.1),cexp,input$r)
+      Ncent <- tibble(tiempo = resode[,1],
+                      N = resode[,2],
+                      percap = numeric(((input$tiempos-1)/0.1)+1),
+                      logN = log(N))
+      
+      for(a in 1:length(Ncent$N)) {Ncent$percap[a]<-(Ncent$N[a+1]-Ncent$N[a])/Ncent$N[a]}
+      Ncent <- Ncent[1:(length(Ncent$N)-1),]
       
       if (input$graphtypec == "D"){ 
-        ejex <- Ncent$time 
-        ejey  <-  Ncent$`1`
+        ejex <- Ncent$tiempo 
+        ejey  <-  Ncent$N
       } else if (input$graphtypec == "E") {
-        ejex <-  Ncent$time 
+        ejex <-  Ncent$tiempo 
         ejey <- Ncent$logN
+      } else if (input$graphtypec == "F") {
+        ejex <- Ncent$N
+        ejey <- Ncent$percap
       }
+      
+      
       datos <- tibble(ejex,ejey)
     }
     
   })
   
   output$plot <- renderPlot({
-    p <- ggplot(data=datos())+
-      geom_point(mapping= aes(x = ejex, y = ejey), color = 'blue', size = 2)
-    
+    p <- ggplot(data=datos(),mapping= aes(x = ejex, y = ejey))+
+      geom_point(color = 'blue', size = 2)+
+      geom_path(color = 'lightblue', linetype = 2 )+
+      xlab("")+ylab("")+
+      theme_minimal()
     print(p)
   })
   
