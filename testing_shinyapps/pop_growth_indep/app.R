@@ -1,6 +1,9 @@
 library("shiny")
 library("tidyverse")
 library(deSolve)
+library(MASS)
+library(mgcv)
+
 cexp<-function(t,y,parms) {
   n<-y[1]
   r<-parms[1]
@@ -128,3 +131,4 @@ server <- function(input, output, session) {
 }
 
 shinyApp(ui = ui, server = server) 
+#rsconnect::deployApp('F:/Particion d/Docs/Docencia/teaching_popecology/testing_shinyapps/pop_growth_indep')

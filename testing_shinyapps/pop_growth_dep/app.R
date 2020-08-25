@@ -54,7 +54,7 @@ parameter_tabs <- tabsetPanel(
   type = "tabs",
   tabPanel("discreto", id = "discreto",
            sliderInput('lambda', 'lambda', min=0.1, max=5,
-                       value=1, step=0.1),
+                       value=1.2, step=0.1),
            radioButtons("funciond","Modelo de crecimiento ", selected = "ricker",
                         choices = c("Ricker" = "ricker",
                                     "Beverton-Holt" = "BH",
@@ -67,7 +67,7 @@ parameter_tabs <- tabsetPanel(
   ),
   tabPanel("continuo", id = "continuo",
            sliderInput('r', 'r', min=-2, max=2,
-                       value=0, step=0.1),
+                       value=0.2, step=0.1),
            radioButtons("funcionc","Modelo de crecimiento ", selected = "clogcont",
                         choices = c("logístico continuo" = "clogcont",
                                     "densodependencia zeta" = "zetacont")),
@@ -131,7 +131,7 @@ server <- function(input, output, session) {
                      t = input$tiempos, lambda = input$lambda)
       } else if (input$funciond == "logdis") {
         Nd <- logdis(K = input$K, Nini = input$Nini, 
-                     t = input$tiempos, rd = 1-input$lambda)
+                     t = input$tiempos, rd = (input$lambda)-1)
       }
       
       Nent <- tibble(Nd,
@@ -201,8 +201,11 @@ server <- function(input, output, session) {
   })
   
   output$plot <- renderPlot({
-    p <- ggplot(data=datos())+
-      geom_point(mapping= aes(x = ejex, y = ejey), color = 'blue', size = 2)
+    p <- ggplot(data=datos(),mapping= aes(x = ejex, y = ejey))+
+      geom_point(color = 'blue', size = 2)+
+      geom_path(color = 'lightblue', linetype = 2 )+
+      xlab("")+ylab("")+
+      theme_minimal()
     
     print(p)
   })
