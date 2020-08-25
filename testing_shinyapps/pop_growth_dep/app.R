@@ -157,21 +157,32 @@ server <- function(input, output, session) {
     } else if (input$params == "continuo") {
       
       
-      if (input$funciond == "clogcont"){ 
+      if (input$funcionc == "clogcont"){ 
         
-        Ncent<-ode(input$Nini,seq(1.0,input$tiempos,by=0.1),
+        resode<-ode(input$Nini,seq(1.0,input$tiempos,by=0.1),
                    clogcont,parms=c(input$r,input$K))
-        Ncent <- tibble(tiempo = Ncent[,1],
-                        N = Ncent[,2]) 
-        Ncent <- mutate(Ncent, logN = log(N))
+        Ncent <- tibble(tiempo = resode[,1],
+                        N = resode[,2],
+                        percap = numeric(((input$tiempos-1)/0.1)+1)) 
         
-      } else if (input$funciond == "zetacont") {
+        for(a in 1:length(Ncent$N)) {Ncent$percap[a]<-(Ncent$N[a+1]-Ncent$N[a])/Ncent$N[a]}
         
-        Ncent<-ode(input$Nini,seq(1.0,input$tiempos,by=0.1),
+        Ncent <- mutate(Ncent, 
+                        logN = log(N))
+        Ncent <- Ncent[1:(length(Ncent$N)-1),]
+        
+      } else if (input$funcionc == "zetacont") {
+        
+        resode<-ode(input$Nini,seq(1.0,input$tiempos,by=0.1),
                    zetacont,parms=c(input$r,input$K,input$zeta))
-        Ncent <- tibble(tiempo = Ncent[,1],
-                        N = Ncent[,2]) 
+        Ncent <- tibble(tiempo = resode[,1],
+                        N = resode[,2],
+                        percap = numeric(((input$tiempos-1)/0.1)+1))
+        
+        for(a in 1:length(Ncent$N)) {Ncent$percap[a]<-(Ncent$N[a+1]-Ncent$N[a])/Ncent$N[a]}
+        
         Ncent <- mutate(Ncent, logN = log(N))
+        Ncent <- Ncent[1:(length(Ncent$N)-1),]
       } 
       
       if (input$graphtypec == "D"){ 
@@ -180,6 +191,9 @@ server <- function(input, output, session) {
       } else if (input$graphtypec == "E") {
         ejex <-  Ncent$tiempo 
         ejey <- Ncent$logN
+      } else if (input$graphtypec == "F") {
+        ejex <- Ncent$N
+        ejey <- Ncent$percap
       }
       
       datos <- tibble(ejex,ejey)
