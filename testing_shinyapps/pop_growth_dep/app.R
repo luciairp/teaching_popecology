@@ -72,7 +72,7 @@ parameter_tabs <- tabsetPanel(
                         choices = c("logístico continuo" = "clogcont",
                                     "densodependencia zeta" = "zetacont")),
            sliderInput('zeta', 'zeta (solo para modelo con densodependencia zeta)',
-                       min=-2, max=2, value=0, step=0.1),
+                       min=0.1, max=10, value=1, step=0.1),
            radioButtons("graphtypec", "Tipo de gráfico", selected = "D", 
                         choices= c("dN/dt vs tiempo"= "D", 
                                    "log(dN/dt) vs tiempo"= "E",
@@ -94,7 +94,7 @@ ui<- fluidPage(
                   value=9, step=1),
       sliderInput('Nini', 'N inicial', min=0, max=50,
                   value=9, step=1),
-      sliderInput('K', 'capacidad de carga K', min=0, max=1000,
+      sliderInput('K', 'capacidad de carga K', min=0, max=150,
                   value=100, step=10),
       parameter_tabs
     ),
@@ -138,18 +138,21 @@ server <- function(input, output, session) {
                      t =  1:(input$tiempos+1), 
                      razonNd = numeric(input$tiempos+1))
        
-      for(a in 1:input$tiempos+1) {Nent$razonNd[a]<-Nent$Nd[a+1]/Nent$Nd[a]}
+      for(a in 1:(input$tiempos+1)) {Nent$razonNd[a]<-Nent$Nd[a+1]/Nent$Nd[a]}
       Nent <- Nent[1:input$tiempos,]
       
       if (input$graphtyped == "A"){ 
         ejex <- Nent$t 
         ejey  <-  Nent$Nd
+        grafylim <- c(min(Nent$Nd),max(Nent$Nd))
       } else if (input$graphtyped == "B") {
         ejex <-  Nent$t 
         ejey <- log(Nent$Nd)
+        grafylim <- c(min(log(Nent$Nd)),max(log(Nent$Nd)))
       } else if (input$graphtyped == "C") {
         ejex  <-  Nent$Nd 
         ejey <- Nent$razonNd
+        grafylim <- c(0.1,5) #rango de valores posibles de lambda
       }
       
       datos <- tibble(ejex,ejey)
@@ -188,12 +191,15 @@ server <- function(input, output, session) {
       if (input$graphtypec == "D"){ 
         ejex <- Ncent$tiempo 
         ejey  <-  Ncent$N
+        grafylim <- c(min(Ncent$N),max(Ncent$N))
       } else if (input$graphtypec == "E") {
         ejex <-  Ncent$tiempo 
         ejey <- Ncent$logN
+        grafylim <- c(min(Ncent$logN),max(Ncent$logN))
       } else if (input$graphtypec == "F") {
         ejex <- Ncent$N
         ejey <- Ncent$percap
+        grafylim <-c(-0.2,2) #rango de valores posibles de r
       }
       
       datos <- tibble(ejex,ejey)
@@ -205,6 +211,7 @@ server <- function(input, output, session) {
       geom_point(color = 'blue', size = 2)+
       geom_path(color = 'lightblue', linetype = 2 )+
       xlab("")+ylab("")+
+      scale_y_continuous(expand = expansion(mult = 0, add = 2)) +
       theme_minimal()
     
     print(p)
