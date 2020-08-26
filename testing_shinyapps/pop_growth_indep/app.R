@@ -124,6 +124,7 @@ server <- function(input, output, session) {
       geom_point(color = 'blue', size = 2)+
       geom_path(color = 'lightblue', linetype = 2 )+
       xlab("")+ylab("")+
+      scale_y_continuous(expand = expansion(mult = 0, add = 2)) +
       theme_minimal()
     print(p)
   })
