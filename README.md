@@ -3,7 +3,8 @@ Material para la enseñanza de ecología y manejo de poblaciones usados en grado
 
 ## shinyapps  
 elaboradas por Lucía I. Rodríguez-Planes (UBA-UNTDF lrodriguezplanes@untdf.edu.ar)
-[[research gate]](https://www.researchgate.net/profile/Lucia_Rodriguez-Planes)
+[[en ResearchGate]](https://www.researchgate.net/profile/Lucia_Rodriguez-Planes) en twitter @\_luciarp\_
+
 
 - Modelos de crecimiento densoindependiente en poblaciones sin estructura:
 geométrico (a tiempo discreto)
