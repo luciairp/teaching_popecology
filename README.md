@@ -1,15 +1,23 @@
 # teaching_popecology
-Ejercicios de aplicación para temas de ecología y manejo de poblaciones
-usados en grado y posgrado, Argentina
+Material para la enseñanza de ecología y manejo de poblaciones usados en grado y posgrado, Argentina
 
-# Crecimiento poblacional.
+## shinyapps  
+elaborada por Lucía I. Rodríguez-Planes (UBA-UNTDF lrodriguezplanes@untdf.edu.ar)
+[![research gate]](https://www.researchgate.net/profile/Lucia_Rodriguez-Planes)
 
-1. Ejercicio sobre aplicación de modelos de crecimiento a una población de halcones peregrinos seguida en el tiempo, basado en trabajo Establishment and Growth of the Peregrine Falcon Breeding Population Within the Mid-Atlantic Coastal Plain, Watts et al. 2015
-- peregrinos.R
-- peregrinos.txt
-- Watts et al 2015
+- Modelos de crecimiento densoindependiente en poblaciones sin estructura:
+geométrico (a tiempo discreto)
+exponencial (a tiempos continuo)
+- Modelos de crecimiento densodependiete en poblaciones sin estructura
+a tiempo discreto:
+- logístico discreto
+- Beverton-Holt
+- logístico exponencial Ricker
+a tiempo continuo
+- logístico
+- logístico con densodependencia no lineal zeta
 
-2. Ejercicio sobre modelos de crecimiento de poblaciones estructuradas, basado en trabajo sobre jabalíes Population dynamics in wild boar
-Sus scrofa: ecology, elasticity of growth rate and implications for the management of pulsed resource consumers Bieber & Ruf 2005
-- jabalies.R
-- Bieber & Ruf 2005
+### Cita sugerida
+Se puede citar la versión 1.0.0. de este repositorio: 
+
+Rodríguez-Planes, LI. 2020. shinyapp para Modelos de crecimiento densoindependiente de poblaciones sin estructura. v.1.0.0. DOI:   
