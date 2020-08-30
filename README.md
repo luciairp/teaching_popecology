@@ -1,9 +1,11 @@
 # teaching_popecology
 Material original para la enseñanza de ecología y manejo de poblaciones usados en grado y posgrado, Argentina
-[en ResearchGate](https://www.researchgate.net/profile/Lucia_Rodriguez-Planes), en twitter @\_luciarp\_
+elaborado por Lucía I. Rodríguez-Planes (UBA-UNTDF lrodriguezplanes@untdf.edu.ar)
+
+Me encontrás [en ResearchGate](https://www.researchgate.net/profile/Lucia_Rodriguez-Planes),  
+y en twitter @\_luciarp\_
 
 ## shinyapps  
-elaboradas por Lucía I. Rodríguez-Planes (UBA-UNTDF lrodriguezplanes@untdf.edu.ar)
 
 ### Modelos de crecimiento densoindependiente en poblaciones sin estructura:
 - geométrico (a tiempo discreto)
@@ -13,7 +15,8 @@ a tiempo discreto:
 - logístico discreto
 - Beverton-Holt
 - logístico exponencial Ricker
-a tiempo continuo
+
+a tiempo continuo:
 - logístico
 - logístico con densodependencia no lineal zeta
 
