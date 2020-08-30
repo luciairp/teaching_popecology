@@ -23,5 +23,6 @@ a tiempo continuo:
 ### Cita sugerida
 Se puede citar la versión 1.0.0. de este repositorio: 
 
-Rodríguez-Planes, LI. 2020. shinyapp para Modelos de crecimiento densoindependiente de poblaciones sin estructura. v.1.0.0. DOI: 10.5281/zenodo.4008583  
+Rodríguez-Planes, LI. 2020. shinyapp para Modelos de crecimiento densoindependiente de poblaciones sin estructura. v.1.0.0. DOI: 10.5281/zenodo.4008583
+
 [![DOI](https://zenodo.org/badge/206627337.svg)](https://zenodo.org/badge/latestdoi/206627337)
