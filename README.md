@@ -2,8 +2,7 @@
 Material original para la enseñanza de ecología y manejo de poblaciones usados en grado y posgrado, Argentina
 elaborado por Lucía I. Rodríguez-Planes (UBA-UNTDF lrodriguezplanes@untdf.edu.ar)
 
-Me encontrás [en ResearchGate](https://www.researchgate.net/profile/Lucia_Rodriguez-Planes),  
-y en twitter @\_luciarp\_
+Me encontrás [en ResearchGate](https://www.researchgate.net/profile/Lucia_Rodriguez-Planes), y en twitter @\_luciarp\_
 
 ## shinyapps  
 
