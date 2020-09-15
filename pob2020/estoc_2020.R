@@ -1,7 +1,7 @@
 rm(list=ls())
 
 
-x=runif (1) 			
+x <- runif (1) 			
 if (x > 0.5) {resultado='cara'} else { resultado='ceca'}
 resultado  
 
@@ -117,3 +117,51 @@ for (j in 1:simnum){
 }
 
 abline(h=150000,lty=3)
+
+
+# cosecha -----------------------------------------------------------------
+
+rm(list=ls())
+par(mfrow=c(1,1))
+yearmax <- 100
+rmax <- 0.518
+K <- 11760
+sigma <- rnorm(100,0,0)
+Year <- 1:yearmax
+N <- numeric(yearmax)
+H <- numeric(yearmax)
+Q <- 1746
+N[1] <- K
+H[1] <-Q
+for(t in 2:yearmax){
+  N[t]<-max(N[t-1]*exp(rmax*(1-N[t-1]/K)+sigma[t-1])-Q,0)
+  H[t]<-min(Q,N[t-1]*exp(rmax*(1-N[t-1]/K)+sigma[t-1]))
+}
+
+plot(Year,N,type='b',ylim=c(0,1*max(N)),cex.lab=1,cex=1.5,lty=1,pch=16,tck=0.03,las=1)
+lines(Year,H,lty=1,col=2)
+points(Year,H,pch=1,cex=1.5,col=2)
+legend("topright",c("Resource abundance","Harvest"),pch=c(16,1),col=c(1,2))
+
+# proporcional
+rm(list=ls())
+par(mfrow=c(1,1))
+yearmax <- 100
+rmax <- 0.518
+K <- 11760
+h <- 0.3
+sigma<-rnorm(100,0,0)
+
+Year <- 1:yearmax
+N <- numeric(yearmax)
+H <- numeric(yearmax)
+N[1] <- K
+H[1] <- h*K*exp(rmax*(1-K/K))
+for(t in 2:yearmax){
+  N[t]<-max(N[t-1]*exp(rmax*(1-N[t-1]/K)+sigma[t-1])-h*N[t-1],0)
+  H[t]<-min(h*N[t-1],N[t-1]*exp(rmax*(1-N[t-1]/K)+sigma[t-1]))
+}
+plot(Year,N,type='b',ylim=c(0,1*max(N)),cex.lab=1,cex=1.2,lty=1,pch=16,tck=0.03,las=1)
+lines(Year,H,lty=1)
+points(Year,H,pch=1,cex=1)
+legend("topright",c("Resource abundance","Harvest"),pch=c(16,1))
