@@ -1,0 +1,523 @@
+---
+title: "Crecimiento TP2 - UNTDF"
+author: ""
+date: "2do cuatrimestre 2020"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Trabajo práctico 2
+
+RECORDATORIO
+Recordá que dentro de los bloques grises va el código R. Copiá y pegá el código que aparece en el tp dentro de los bloques grises. Para ejecutar podías hacer click en el botón verde de "play" de arriba a la derecha de cada bloque. Todo lo que escribas afuera de los bloques grises (acá!) es texto normal. Si querés agregar bloques de código podés hacerlo apretando el botón de arriba que dice "Insert" y eligiendo del desplegable la opción "R", o usando el acceso directo en el teclado "Ctrl+ALt+i".
+Acá abajo hay algunos bloques armados.
+
+
+```{r}
+#fabrico el vector donde se van a guardar los valores de abundancia Nd en el tiempo, tiene 10 lugares
+Nd<-numeric(10)
+
+#defino el valor de la tasa de crecimiento
+lambda<-1.4
+
+#defino el valor inicial de abundancia
+Nd[1]<-5
+
+#voy a hacer un ciclo de repeticiones: t va a tomar valores entre 2 y 10 de a uno por vez
+for(t in 2:10)
+{Nd[t]<-lambda*Nd[t-1]} #la ecuación de crecimiento geométrico
+Nd #muestra en la consola los valores que toma Nd
+
+```
+
+
+```{r}
+
+# grafica Nd en el tiempo
+plot(c(1:10),Nd,type='b',cex.lab=0.8,ylab='N',xlab='tiempo',cex.axis=0.8,las=1)
+
+```
+
+```{r}
+plot(c(1:10),log(Nd), xlab='tiempo')
+```
+
+```{r}
+plot(Nd[1:9],Nd[2:10]-Nd[1:9])
+```
+
+```{r}
+library(deSolve)
+```
+
+```{r}
+cexp <- function(t,y,parms) {
+n <- y[1]
+r <- parms[1]
+dN.dt <- r*n
+return(list(c(dN.dt)))
+}
+
+out<-ode(5,seq(1.0,10,by=0.1),cexp,c(r=0.3364722))
+out
+```
+
+```{r}
+plot(out[,1],out[,2],las=1,type='b',cex.axis=0.8)
+```
+
+```{r}
+plot(out[,1],log(out[,2]),las=1,cex.axis=0.8,cex.lab=0.8,type='b')
+```
+
+```{r}
+plot(out[,1],out[,2],las=1,type='b',cex.axis=0.8,pch=16,col=2,
+     ylab="N",xlab="tiempo")
+points(c(1:10),Nd,pch=16,col=3)
+legend("topleft",c("continuo","discreto"),pch=16,col=c(2,3),bty="n")
+```
+
+# PARTE B
+
+```{r}
+clogcont <- function(t,y,parms){
+n <- y[1]
+r <- parms[1]
+K <- parms[2]
+dN.dt <- r*n*(1-(n/K))
+return(list(c(dN.dt)))
+}
+```
+
+```{r}
+out <- ode(5,seq(1.0,30,by=0.1),clogcont,parms=c(r=0.5,K=100))
+out
+plot(out[,1],out[,2],pch=16,xlab="tiempo",ylab="N",ylim=c(0,120))
+plot(out[,1],log(out[,2]),pch=16,xlab="tiempo",ylab="ln(N)")
+plot(out[1:90,2],out[2:91,2]-out[1:90,2],pch=16,xlab="N",ylab="reclut neto")
+plot(out[1:90,2],(out[2:91,2]-out[1:90,2])/out[1:90,2],pch=16,xlab="N",ylab="reclut neto per cap")
+```
+
+### LOGÍSTICO CURVILÍNEO ZETA
+```{r}
+zetacont <- function(t,y,parms){
+n <- y[1]
+r <- parms[1]
+K <- parms[2]
+zeta <- parms[3]
+dN.dt <- r*n*(1-((n/K)^zeta))
+return(list(c(dN.dt)))
+}
+```
+
+```{r}
+out <- ode(5,seq(1.0,30,by=0.1),zetacont,parms=c(r=0.8,K=100,zeta=.25))
+out
+plot(out[,1],out[,2],pch=16,xlab="tiempo",ylab="N",ylim=c(0,120))
+plot(out[,1],log(out[,2]),pch=16,xlab="tiempo",ylab="ln(N)")
+plot(out[1:90,2],(out[2:91,2]-out[1:90,2])/out[1:90,2],pch=16,xlab="N",ylab="reclut neto per cap")
+```
+
+## A TIEMPO DISCRETO
+
+### logístico discreto
+```{r}
+logdis <- function(K,rd,N0,t) {
+Nlogis <- c(N0, numeric(t))
+for (i in 1:t) Nlogis[i + 1] <- {
+Nlogis[i]+rd*Nlogis[i]*(1-(Nlogis[i]/K))
+}
+return(Nlogis)
+}
+```
+
+```{r}
+Nlogis <- logdis(K=100,rd=4,N0=5,t=29)
+plot(c(1:30),Nlogis,pch=16,xlab="tiempo",ylab="N",col='blue',type='b')
+```
+
+## Ricker
+
+```{r}
+ricker <- function(K,lambda,N0,t) {
+Nr <- c(N0, numeric(t))
+for (i in 1:t) Nr[i + 1] <- {
+Nr[i] * lambda ^ (1 - (Nr[i] / K))
+}
+return(Nr)
+}
+```
+
+```{r}
+Nric <- ricker(K=100,lambda=5,N0=5,t=29)
+plot(c(1:30),Nric,pch=16,xlab="tiempo",ylab="N")
+```
+
+## BEVERTON-HOLT
+
+```{r}
+BH <- function(K,lambda,N0,t) {
+Nbh <- c(N0, numeric(t))
+for (i in 1:t) Nbh[i + 1] <- {
+(Nbh[i] * lambda) / ( 1 + ((Nbh[i]*(lambda-1))/ K))
+}
+return(Nbh)
+}
+```
+
+```{r}
+NBH <- BH(K=100,lambda=1.65,N0=5,t=29)
+plot(c(1:30),NBH,pch=16,xlab="tiempo",ylab="N")
+```
+
+```{r}
+datos <- read.table("peregrino.txt",header=T)
+library(ggplot2)
+```
+
+```{r}
+# grafico territorios segun anho
+ggplot(data=datos,aes(x=anho,y=territorios))+
+geom_point()+
+geom_vline(xintercept=1980,color='red')+
+geom_vline(xintercept=1985,color='red')+
+geom_hline(yintercept=0,color='red')+
+ggtitle("territorios") +
+theme_light()
+#nidos activos segun anho
+ggplot(data=datos,aes(x=anho,y=activos))+
+geom_point()+
+geom_vline(xintercept=1980,color='red')+
+geom_vline(xintercept=1985,color='red')+
+geom_hline(yintercept=0,color='red')+
+ggtitle("nidos activos") +
+theme_light()
+# nidos exitosos segun anho
+ggplot(data=datos,aes(x=anho,y=exito))+
+geom_point()+
+geom_vline(xintercept=1980,color='red')+
+geom_vline(xintercept=1985,color='red')+
+geom_hline(yintercept=0,color='red')+
+ggtitle("nidos exitosos") +
+theme_light()
+# juveniles segun anho
+ggplot(data=datos,aes(x=anho,y=juveniles))+
+geom_point()+
+geom_vline(xintercept=1980,color='red')+
+geom_vline(xintercept=1985,color='red')+
+geom_hline(yintercept=0,color='red')+
+ggtitle("juveniles") +
+theme_light()
+```
+
+```{r}
+# miramos en escala logaritmica
+# usamos la funcion que calcula el logaritmo natural
+datos$logterr<-log(datos$territorios)
+datos$logac<-log(datos$activos)
+datos$logex<-log(datos$exito)
+datos$logjuv<-log(datos$juveniles)
+# graficamos otra vez
+ggplot(data=datos,aes(x=anho,y=logterr))+
+geom_point()+
+geom_vline(xintercept=1980,color='red')+
+geom_vline(xintercept=1985,color='red')+
+geom_hline(yintercept=0,color='red')+
+ggtitle("ln(territorios)") +
+theme_light()
+ggplot(data=datos,aes(x=anho,y=logac))+
+geom_point()+
+geom_vline(xintercept=1980,color='red')+
+geom_vline(xintercept=1985,color='red')+
+geom_hline(yintercept=0,color='red')+
+ggtitle("ln(nidos activos)") +
+theme_light()
+ggplot(data=datos,aes(x=anho,y=logex))+
+geom_point()+
+geom_vline(xintercept=1980,color='red')+
+geom_vline(xintercept=1985,color='red')+
+geom_hline(yintercept=0,color='red')+
+ggtitle("ln(nidos exitosos)") +
+theme_light()
+ggplot(data=datos,aes(x=anho,y=logjuv))+
+geom_point()+
+geom_vline(xintercept=1980,color='red')+
+geom_vline(xintercept=1985,color='red')+
+geom_hline(yintercept=0,color='red')+
+ggtitle("ln(juveniles)") +
+theme_light()
+```
+
+```{r}
+# vamos a calcular las tasas de crecimiento para cada metrica
+# para calcular cada una hay varias lineas de codigo
+# tasa de crecimiento de territorios
+datos$lterr[1] <- NA
+datos$lterr[2:29]<-datos$territorios[2:29]/datos$territorios[1:28]
+datos$lterr <- as.numeric(datos$lterr)
+#tasa de crecimiento de nidos activos
+# datos$lact[1:2] <- NA
+datos$lact[3:29]<-datos$activos[3:29]/datos$activos[2:28]
+datos$lact <- as.numeric(datos$lact)
+# tasa de crecimiento de nidos exitosos
+# datos$lex[1:2] <- NA
+datos$lex[3:29]<-datos$exito[3:29]/datos$exito[2:28]
+datos$lex <- as.numeric(datos$lex)
+# tasa de crecimiento de juveniles
+# datos$ljuv[1:2] <- NA
+datos$ljuv[3:29]<-datos$juveniles[3:29]/datos$juveniles[2:28]
+datos$ljuv <- as.numeric(datos$ljuv)
+```
+
+```{r}
+#grafico lambda en funcion del tiempo
+ggplot(data=datos,aes(x=anho,y=lterr))+
+geom_point()+
+geom_vline(xintercept=1980,color='red')+
+geom_vline(xintercept=1985,color='red')+
+geom_hline(yintercept=1,color='red')+
+ggtitle("lambda territorios") +
+theme_light()
+ggplot(data=datos,aes(x=anho,y=lact))+
+geom_point()+
+geom_vline(xintercept=1980,color='red')+
+geom_vline(xintercept=1985,color='red')+
+geom_hline(yintercept=1,color='red')+
+ggtitle("lambda nidos activos") +
+theme_light()
+ggplot(data=datos,aes(x=anho,y=lex))+
+geom_point()+
+geom_vline(xintercept=1980,color='red')+
+geom_vline(xintercept=1985,color='red')+
+geom_hline(yintercept=1,color='red')+
+ggtitle("lambda nidos exitosos") +
+theme_light()
+ggplot(data=datos,aes(x=anho,y=ljuv))+
+geom_point()+
+geom_vline(xintercept=1980,color='red')+
+geom_vline(xintercept=1985,color='red')+
+geom_hline(yintercept=1,color='red')+
+ggtitle("lambda juveniles") +
+theme_light()
+```
+
+```{r}
+# en funcion de la densidad
+ggplot(data=datos,aes(x=territorios,y=lterr,color=liberaciones))+
+geom_point()+
+ggtitle("lambda segun territorios") +
+geom_hline(yintercept=1,color='red')+
+theme_light()
+ggplot(data=datos,aes(x=activos,y=lact,color=liberaciones))+
+geom_point()+
+ggtitle("lambda segun nidos activos") +
+geom_hline(yintercept=1,color='red')+
+  theme_light()
+ggplot(data=datos,aes(x=exito,y=lex,color=liberaciones))+
+geom_point()+
+ggtitle("lambda segun nidos exitosos") +
+geom_hline(yintercept=1,color='red')+
+theme_light()
+ggplot(data=datos,aes(x=juveniles,y=ljuv,color=liberaciones))+
+geom_point()+
+ggtitle("lambda segun juveniles") +
+geom_hline(yintercept=1,color='red')+
+theme_light()
+```
+
+```{r}
+# vamos a analizar el ajuste al modelo de crecimiento geométrico:
+# a tasa constante
+# Vamos a ajustar cada metrica en cada etapa a un modelo lineal
+# Cada seccion tiene tres partes:
+# 1. plantear el modelo y pedir ver el ajuste para la 1a etapa
+# 2. repetir para la 2a etapa
+# 3. hacer el grafico donde se vean los ajustes lineales
+# TERRITORIOS
+# planteo el modelo lineal para consolidacion (sin liberaciones)
+mod.terr1<-lm(datos$lterr[datos$anho >= 1986]~datos$territorios[datos$anho >=1986])
+# pido el resumen estadistico del modelo lineal
+summary(mod.terr1)
+#planteo el modelo lineal para establecimiento (con liberaciones)
+mod.terr2<-lm(datos$lterr[datos$anho < 1986 & datos$anho >= 1980]~datos$territorios[datos$anho < 1986 & datos$anho >= 1980])
+# pido el resumen estadistico
+summary(mod.terr2)
+# grafico superponiendo los ajustes lineales
+ggplot(data=datos,aes(x=territorios,y=lterr,color=liberaciones))+
+geom_point()+
+ggtitle("lambda segun territorios") +
+geom_hline(yintercept=1,color='violet')+
+geom_smooth(data=subset(datos, anho >= 1986),method='lm',se=F)+
+geom_smooth(data=subset(datos, anho < 1986 & anho >= 1980),method='lm',se=F)+
+theme_light()
+
+```
+
+```{r}
+# NIDOS ACTIVOS
+# planteo el modelo lineal para consolidacion (sin liberaciones)
+mod.act1<-lm(datos$lact[datos$anho >= 1986]~datos$activos[datos$anho >= 1986])
+# pido el resumen estadistico del modelo lineal
+summary(mod.act1)
+#planteo el modelo lineal para establecimiento (con liberaciones)
+mod.act2<-lm(datos$lact[datos$anho < 1986 & datos$anho >= 1980]~datos$activos[datos$anho < 1986 & datos$anho >= 1980])
+# pido el resumen estadistico
+summary(mod.act2)
+# grafico superponiendo los ajustes lineales
+ggplot(data=datos,aes(x=activos,y=lact,color=liberaciones))+
+geom_point()+
+ggtitle("lambda segun nidos activos") +
+geom_hline(yintercept=1,color='violet')+
+geom_smooth(data=subset(datos, anho >= 1986),method='lm',se=F)+
+geom_smooth(data=subset(datos, anho < 1986 & anho >= 1980),method='lm',se=F)+
+theme_light()
+```
+
+```{r}
+# NIDOS EXITOSOS
+# planteo el modelo lineal para la etapa de consolidacion (sin liberaciones)
+mod.ex1<-lm(datos$lex[datos$anho >= 1986]~datos$exito[datos$anho >= 1986])
+# pido el resumen estadistico del modelo lineal
+summary(mod.ex1)
+#planteo el modelo lineal para la etapa establecimiento (con liberaciones)
+mod.ex2<-lm(datos$lex[datos$anho < 1986 & datos$anho >= 1980]~datos$exito[datos$anho < 1986 & datos$anho >= 1980])
+# pido el resumen estadistico
+summary(mod.ex2)
+# grafico superponiendo los ajustes lineales
+ggplot(data=datos,aes(x=exito,y=lex,color=liberaciones))+
+geom_point()+
+ggtitle("lambda segun nidos exitosos") +
+geom_hline(yintercept=1,color='violet')+
+geom_smooth(data=subset(datos, anho >= 1986),method='lm',se=F)+
+geom_smooth(data=subset(datos, anho < 1986 & anho >= 1980),method='lm',se=F)+
+theme_light()
+```
+
+```{r}
+# JUVENILES
+# planteo el modelo lineal para la etapa consolidacion (sin liberaciones)
+mod.juv1<-lm(datos$ljuv[datos$anho >= 1986]~datos$juveniles[datos$anho >= 1986])
+# pido el resumen estadistico del modelo lineal
+# (hay que buscarlo en la ventana "Consola")
+summary(mod.juv1)
+#planteo el modelo lineal para la etapa establecimiento (con liberaciones)
+mod.juv2<-lm(datos$ljuv[datos$anho < 1986 & datos$anho >= 1980]~datos$juveniles[datos$anho < 1986 & datos$anho >= 1980])
+# pido el resumen estadistico
+summary(mod.juv2)
+# grafico superponiendo los ajustes lineales
+ggplot(data=datos,aes(x=juveniles,y=ljuv,color=liberaciones))+
+geom_point()+
+ggtitle("lambda segun juveniles") +
+geom_hline(yintercept=1,color='violet')+
+geom_smooth(data=subset(datos, anho >= 1986),method='lm',se=F)+
+geom_smooth(data=subset(datos, anho < 1986 & anho >= 1980),method='lm',se=F)+
+theme_light()
+```
+
+# ESTOCASTICIDAD
+
+```{r}
+N <- numeric(100)
+N[1] <- 10
+tiempo <- 99
+lbueno <- 5/4
+lmalo <- 4/5
+#con el siguiente ciclo fabricamos la serie temporal
+#que significa la condicion "runif"<0.5?
+for (i in 1:tiempo){
+if(runif(1)<0.5){lambda<-lmalo} else {lambda<-lbueno}
+N[i+1]<-lambda*N[i]
+}
+#y hacemos el grafico
+plot(c(1:100),N,pch=16,cex.axis=0.8,cex.lab=0.8,type="b",xlab="tiempo")
+```
+```{r}
+N <- numeric(100)
+N[1] <- 10
+tiempo <- 99
+lbueno <- 5/4
+lmalo <- 3/4
+#con el siguiente ciclo fabricamos la serie temporal
+#que significa la condicion "runif"<0.5?
+for (i in 1:tiempo){
+if(runif(1)<0.5){lambda<-lmalo} else {lambda<-lbueno}
+N[i+1]<-lambda*N[i]
+}
+#y hacemos el grafico
+plot(c(1:100),N,pch=16,cex.axis=0.8,cex.lab=0.8,type="b",xlab="tiempo")
+```
+
+
+
+```{r}
+A <- matrix(0,nrow=20,ncol=100)
+A[,1] <- 10
+for (j in 1:20){
+for (i in 1:tiempo){
+if(runif(1)<0.5){lambda<-lmalo} else {lambda<-lbueno}
+A[j,i+1]<-lambda*A[j,i]
+}
+}
+#codigo para superponer lineas
+plot(c(1:100),N,pch=16,cex.axis=0.8,cex.lab=0.8,type="n",xlab="tiempo",ylim=c(0,100))
+for (j in 1:20){
+for (i in 1:tiempo){
+if(runif(1)<0.5){lambda<-lmalo} else {lambda<-lbueno}
+N[i+1]<-lambda*N[i]
+}
+lines(1:100,N,col=j)
+}
+```
+
+
+## densodependencia
+
+```{r}
+lambda <- 1.1323
+tiempo <- 25
+N <- numeric(tiempo)
+N[1] <- 2500000
+umbral <- 150000
+```
+
+```{r}
+#fabrico una población en el tiempo
+for(i in 1:(tiempo-1)){
+N[i+1]<-
+(N[i]*lambda)/(1+(N[i]*(lambda-1)/(rlnorm(1,meanlog=4.8479,sdlog=0.8284)*20748)))
+if(N[i]<umbral)
+{N[i+1]<-0
+}
+}
+```
+
+```{r}
+# grafico
+par(oma=c(1,2,1,1),mgp=c(6,0.5,0))
+plot(1:25,N,las=1,cex=0.8,cex.axis=0.8,xlab="",ylab="abundancia",type="l",ylim=c(0,max(N)))
+```
+
+```{r}
+simnum <- 10 #número de simulaciones que quiero ver en el mismo gráfico
+N <- as.data.frame(matrix(NA,nrow = tiempo, ncol = simnum))
+N[1,] <- 2500000
+par(oma=c(0,1,0,1),mgp=c(3.3,0.5,0))
+plot(1:25,N[,1],type='n',las=1,cex=0.8,cex.axis=0.8,xlab="",ylab="N",
+ylim=c(0,3500000),pch = 21)
+for (j in 1:simnum){
+for(i in 1:(tiempo-1)){
+N[i+1,j]<-
+(N[i,j]*lambda)/
+(1+(N[i,j]*(lambda-1)/(rlnorm(1,meanlog=4.8479,sdlog=0.8284)*20748)))
+if(N[i,j]<umbral){
+N[i+1,j]<-0
+}
+}
+lines(1:25,N[,j],col=j,type = 'b', pch=16,lwd=2)
+}
+abline(h=150000,lty=3)
+```
+
