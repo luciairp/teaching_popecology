@@ -15,7 +15,9 @@ colnames(A) <- c("volantones","subadultos","adultos")
 # reemplazamos los valores de las tasas
 A[1,3] <- s*b
 A[2,1] <- s0*sd
+#A[2,1] <- 0.71
 A[3,2] <- s1
+#A[3,2] <- 0.18
 A[3,3] <- s
 
 # miramos como quedo la matriz A
