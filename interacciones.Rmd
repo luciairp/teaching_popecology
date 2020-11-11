@@ -1,0 +1,500 @@
+---
+title: "TP interacciones"
+author: "LRP"
+date: "November 2020"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# PARTE A: depredación
+
+## Modelo clásico Lotka-Volterra
+```{r}
+# cargamos funciones de paquetes
+library(deSolve)
+library(ggplot2)
+
+# Fabricamos una funcion que hace la integracion del
+# crecimiento de depredador y presa juntos
+LV <- function(t,y,params) {
+  H <- y[1]
+  P <- y[2]
+  with(as.list(params), {
+    dH.dt<-b*H-a*P*H
+    dP.dt<-e*a*P*H-s*P
+    return(list(c(dH.dt,dP.dt)))
+  })
+}
+
+# Definimos parametros de cada poblacion
+#H presa y P depredador
+b <- 0.5 #"r"
+a <- 0.01 #exito depredacion
+e <- 0.1 #eficiencia rta numerica
+s <- 0.2 #mortalidad
+H0<-25 #abundancia inicial de H
+P0<-5 #abundancia inicial de P
+params1<-c(b=b,a=a,s=s,e=e)
+tiempo<-seq(0,100,by=0.1)
+
+# calculamos serie de abundancia de poblaciones
+# y vemos la primera parte
+LV.out<-ode(c(H0,P0),tiempo,LV,params1)
+LV.out <- as.data.frame(LV.out)
+colnames(LV.out) <- c("tiempo","H","P")
+head(LV.out)
+
+# Graficamos N vs tiempo
+ggplot(data=LV.out,aes(x=tiempo,y=abundancia))+
+  geom_point(aes(y=H),col='darkgreen',size=1)+
+  geom_point(aes(y=P),col='red',size=1)+
+  ggtitle("25 presas y 5 predadores")+
+  theme_light()
+
+```
+
+```{r}
+# 500 presas y 15 depredadores
+LV.out2<-ode(c(H0=500,P0=15),tiempo,LV,params1)
+LV.out2 <- as.data.frame(LV.out2)
+colnames(LV.out2) <- c("tiempo","H","P")
+# graficamos:
+ggplot(data=LV.out2,aes(x=tiempo,y=abundancia))+
+  geom_point(aes(y=H),col='darkgreen',size=1)+
+  geom_point(aes(y=P),col='red',size=1)+
+  ggtitle("5oo presas y 15 depredadores")+
+  theme_light()
+
+# 300 presas y 50 depredadores
+LV.out3<-ode(c(H0=300,P0=50),tiempo,LV,params1)
+LV.out3 <- as.data.frame(LV.out3)
+colnames(LV.out3) <- c("tiempo","H","P")
+# graficamos:
+ggplot(data=LV.out3,aes(x=tiempo,y=abundancia))+
+  geom_point(aes(y=H),col='darkgreen',size=1)+
+  geom_point(aes(y=P),col='red',size=1)+
+  ggtitle("3oo presas y 50 depredadores")+
+  theme_light()
+
+```
+
+```{r}
+LV.out
+LV.out2
+LV.out3
+```
+
+```{r diagrama de fases}
+ggplot()+
+  geom_point(data=LV.out,aes(x=H,y=P),col='darkviolet',size=0.8)+
+  geom_point(data=LV.out2,aes(x=H,y=P),col='blue',size=0.8)+
+  geom_point(data=LV.out3,aes(x=H,y=P),col='brown',size=0.8)+
+  geom_point(aes(x=25,y=5),size=4,col='red')+
+  geom_point(aes(x=500,y=15),size=4,col='red')+
+  geom_point(aes(x=300,y=50),size=4,col='red')+
+  theme_light()
+
+```
+
+```{r}
+# diagrama de fases + nulclinas
+ggplot()+
+  geom_point(data=LV.out,aes(x=H,y=P),col='darkviolet',size=0.8)+
+  geom_point(data=LV.out2,aes(x=H,y=P),col='blue',size=0.8)+
+  geom_point(data=LV.out3,aes(x=H,y=P),col='brown',size=0.8)+
+  geom_point(aes(x=25,y=5),size=4,col='red')+
+  geom_point(aes(x=500,y=15),size=4,col='red')+
+  geom_point(aes(x=300,y=50),size=4,col='red')+
+  geom_vline(xintercept=s/(e*a))+
+  geom_hline(yintercept=b/a)+
+  theme_light()
+
+```
+
+## Modelo Rosezweig-McArthur: otras respuestas funcionales
+```{r}
+#para ver la respuesta funcional graficamente
+a<- 0.1 #tasa de ataque
+w <- 0.1 #tasa maxima de captura
+D <- w/a
+#graf numero de presas consumidas segun su abundancia
+curve(a * x, 0, 2, xlab ="Abund presa N",ylab="N consumido",las=1)
+curve(w * x/(D + x),0,2,add=TRUE,lty=2)
+curve(w * x^2/(D^2 +x^2),0,2,add=TRUE,lty=3)
+legend("topleft",c("Tipo I","Tipo II","Tipo III"),lty=1:3,bty ="n")
+#graf prop de presas consumidas segun su abundancia
+curve(w * x^2/(D^2 + x^2)/x,0,2,ylim=c(0,a),lty=3,xlab="Abund presa N",ylab="N prop consumido",las=1)
+curve(w * x/(D + x)/x, 0, 2, lty = 2, add = TRUE)
+curve(a * x/x, 0, 2, add = TRUE, lty = 1)
+legend("topright",c("Tipo I","Tipo II","Tipo III"),lty=1:3,bty ="n")
+
+```
+
+```{r}
+# Modelo de Rosenzweig & McArthur
+#funcion
+LVmodif<- function(t, y, p) {
+  H<-y[1]
+  P<-y[2]
+  with(as.list(p), {
+    dH.dt<-b*H*(1-alpha*H)-w*P*H/(D+H)
+    #dH.dt<-b*H*(1-alpha*H)-
+    dP.dt<-e*w*P*H/(D+H)-s*P
+    return(list(c(dH.dt, dP.dt)))
+  })
+}
+
+#parametros
+b <- 0.8 #"r"
+e <- 0.07 #rta numerica
+s <- 0.2 #mortalidad
+w <- 5 #tasa maxima de captura-eficiencia (area recorrida-esfuerzo)
+D <- 400 
+alpha <- 0.001 #densodependencia, es igual a dividir por K=1000 individuos
+abundH <- 0:(1/alpha) #la abundancia de la presa puede estar entre 0 y K
+#isoclina de H sera asi:
+Hiso<-expression(b/w*(D+(1-alpha*D)*abundH-alpha*abundH^2))
+HisoStable<-eval(Hiso)
+
+#trayectoria
+p.LVmodif<-c(b=b,alpha=alpha,e=e,s=s,w=w,D=D)
+tiempo<-100
+tiempo<-seq(0,100,by=0.1)
+RM1<-ode(c(900,120),tiempo,LVmodif,p.LVmodif)
+RM1 <- cbind.data.frame(RM1,HisoStable,abundH)
+colnames(RM1) <- c("tiempo","H","P","isocl","abundH")
+
+# graficamos la trayectoria de las poblaciones:
+ggplot(data=RM1,aes(x=tiempo,y=abundancia))+
+  geom_point(aes(y=H),col='darkgreen',size=1)+
+  geom_point(aes(y=P),col='red',size=1)+
+  ggtitle("RM")+
+  theme_light()
+
+# y graficamos el diagrama de fases + nulclinas
+ggplot()+
+  geom_point(data=RM1,aes(x=H,y=P),col='darkviolet',size=1.2)+
+  geom_point(aes(x=900,y=120),size=4,col='red')+
+  geom_vline(xintercept=s*D/(e*w-s),size=.8)+
+  geom_point(data=RM1,aes(x=abundH,y=isocl),size=.2)+
+  theme_light()
+
+```
+
+## Extra: la paradoja del enriquecimiento
+```{r}
+#vamos a usar los parametros ya definidos con algunos cambios:
+p.LVmodif["alpha"] <- alpha <- 5e-04 #redefino K a 2000
+alpha <- 5e-04 #densodependencia, es igual a dividir por K=1000 individuos
+abundH <- 0:(1/alpha) #la abundancia de la presa puede estar entre 0 y K
+Hiso<-expression(b/w*(D+(1-alpha*D)*abundH-alpha*abundH^2))
+HisoStable<-eval(Hiso)
+isoclH <- data.frame(abundH,HisoStable)
+
+#trayectoria
+RM2<-ode(c(500,110),tiempo,LVmodif,p.LVmodif)
+RM2 <- as.data.frame(RM2)
+colnames(RM2) <- c("tiempo","H","P")
+
+#grafico
+ggplot()+
+  geom_point(data=RM2,aes(x=H,y=P),col='darkviolet',size=1.2)+
+  geom_point(aes(x=500,y=110),size=4,col='red')+
+  geom_vline(xintercept=s*D/(e*w-s),size=.8)+
+  geom_point(data=isoclH,aes(x=abundH,y=HisoStable),size=.2)+
+  theme_light()
+
+```
+
+# Parte B: herbivoría y un modelo tritrófico
+
+```{r}
+library(deSolve)
+#función
+tritr<- function(t,y,p){
+  V<-y[1]
+  N<-y[2]
+  P<-y[3]
+  with(as.list(p),{
+    dV.dt<-(r*(1-(V/K))*V)-((a*V*N)/(b+V))
+    dN.dt<-((a*e*V*N)/(b+V))-(d*N)-((A*N*P)/(B+N))
+    dP.dt<-((A*E*N*P)/(B+N))-(D*P) 
+    return(list(c(dV.dt,dN.dt,dP.dt)))
+  })
+}
+
+```
+
+```{r}
+#parametros
+r<-1#"r" de rebrote
+K<-1000#capacidad de carga de las plantas
+a<-0.7#tasa de consumo vicuña-planta
+b<-500#valor biomasa para el cual consumo de la vicuña es la mitad
+e<-1#rta numerica - efectividad transformar planta en vicuñitas
+d<-0.15#valor biomasa para el cual vicuña se mantiene sin crecer
+A<-0.15#como a pero para puma-vicuña, tasa consumo puma-vicuña
+B<-50#como b pero para puma-vicuña
+E<-2.3#como e pero para efectividad transformar vicuñas en pumitas
+D<-0.3 #como d pero para el puma
+
+```
+
+```{r}
+#trayectoria
+p.tritr<-c(r=r,K=K,a=a,b=b,d=d,e=e,A=A,B=B,E=E,D=D)
+tiempo<-1000
+tritr1<-ode(c(50,50,50),1:tiempo,tritr,p.tritr)
+
+#
+Neq <- D*B/((A*E)-D)
+
+```
+
+
+```{r}
+#grafico en el tiempo
+par(mfrow=c(3,1),mar=c(1,4,1,1))
+plot(1:tiempo,tritr1[,2],type="l",ylim=c(0,max(tritr1[,2])),ylab="veg")
+plot(1:tiempo,tritr1[,3],type="l",ylim=c(0,max(tritr1[,3])),ylab="vicuña")
+plot(1:tiempo,tritr1[,4],type="l",ylim=c(0,max(tritr1[,4])),ylab="puma")
+
+```
+
+```{r cambio A de 0.15 a 0.28}
+#parametros
+r<-1#"r" de rebrote
+K<-1000#capacidad de carga de las plantas
+a<-0.7#tasa de consumo vicuña-planta
+b<-500#valor biomasa para el cual consumo de la vicuña es la mitad
+e<-1#rta numerica - efectividad transformar planta en vicuñitas
+d<-0.15#valor biomasa para el cual vicuña se mantiene sin crecer
+A<-0.28#como a pero para puma-vicuña, tasa consumo puma-vicuña
+B<-50#como b pero para puma-vicuña
+E<-2.3#como e pero para efectividad transformar vicuñas en pumitas
+D<-0.3 #como d pero para el puma
+
+#trayectoria
+p.tritr<-c(r=r,K=K,a=a,b=b,d=d,e=e,A=A,B=B,E=E,D=D)
+tiempo<-1000
+tritr1<-ode(c(50,50,50),1:tiempo,tritr,p.tritr)
+
+#
+Neq <- D*B/((A*E)-D)
+
+#grafico en el tiempo
+par(mfrow=c(3,1),mar=c(1,4,1,1))
+plot(1:tiempo,tritr1[,2],type="l",ylim=c(0,max(tritr1[,2])),ylab="veg")
+plot(1:tiempo,tritr1[,3],type="l",ylim=c(0,max(tritr1[,3])),ylab="vicuña")
+plot(1:tiempo,tritr1[,4],type="l",ylim=c(0,max(tritr1[,4])),ylab="puma")
+
+
+```
+
+```{r cambio A de 0.15 a 0.135}
+#parametros
+r<-1#"r" de rebrote
+K<-1000#capacidad de carga de las plantas
+a<-0.7#tasa de consumo vicuña-planta
+b<-500#valor biomasa para el cual consumo de la vicuña es la mitad
+e<-1#rta numerica - efectividad transformar planta en vicuñitas
+d<-0.15#valor biomasa para el cual vicuña se mantiene sin crecer
+A<-0.135#como a pero para puma-vicuña, tasa consumo puma-vicuña
+B<-50#como b pero para puma-vicuña
+E<-2.3#como e pero para efectividad transformar vicuñas en pumitas
+D<-0.3 #como d pero para el puma
+
+#trayectoria
+p.tritr<-c(r=r,K=K,a=a,b=b,d=d,e=e,A=A,B=B,E=E,D=D)
+tiempo<-1000
+tritr1<-ode(c(50,50,50),1:tiempo,tritr,p.tritr)
+
+#
+Neq <- D*B/((A*E)-D)
+
+#grafico en el tiempo
+par(mfrow=c(3,1),mar=c(1,4,1,1))
+plot(1:tiempo,tritr1[,2],type="l",ylim=c(0,max(tritr1[,2])),ylab="veg")
+plot(1:tiempo,tritr1[,3],type="l",ylim=c(0,max(tritr1[,3])),ylab="vicuña")
+plot(1:tiempo,tritr1[,4],type="l",ylim=c(0,max(tritr1[,4])),ylab="puma")
+
+```
+
+```{r cambio a de 0.7 a 0.45}
+#parametros
+r<-1#"r" de rebrote
+K<-1000#capacidad de carga de las plantas
+a<-0.45#tasa de consumo vicuña-planta
+b<-500#valor biomasa para el cual consumo de la vicuña es la mitad
+e<-1#rta numerica - efectividad transformar planta en vicuñitas
+d<-0.15#valor biomasa para el cual vicuña se mantiene sin crecer
+A<-0.15#como a pero para puma-vicuña, tasa consumo puma-vicuña
+B<-50#como b pero para puma-vicuña
+E<-2.3#como e pero para efectividad transformar vicuñas en pumitas
+D<-0.3 #como d pero para el puma
+
+#trayectoria
+p.tritr<-c(r=r,K=K,a=a,b=b,d=d,e=e,A=A,B=B,E=E,D=D)
+tiempo<-1000
+tritr1<-ode(c(50,50,50),1:tiempo,tritr,p.tritr)
+
+#
+Neq <- D*B/((A*E)-D)
+
+#grafico en el tiempo
+par(mfrow=c(3,1),mar=c(1,4,1,1))
+plot(1:tiempo,tritr1[,2],type="l",ylim=c(0,max(tritr1[,2])),ylab="veg")
+plot(1:tiempo,tritr1[,3],type="l",ylim=c(0,max(tritr1[,3])),ylab="vicuña")
+plot(1:tiempo,tritr1[,4],type="l",ylim=c(0,max(tritr1[,4])),ylab="puma")
+```
+
+```{r cambio d de 0.15 a 0.25}
+#parametros
+r<-1#"r" de rebrote
+K<-1000#capacidad de carga de las plantas
+a<-0.7#tasa de consumo vicuña-planta
+b<-500#valor biomasa para el cual consumo de la vicuña es la mitad
+e<-1#rta numerica - efectividad transformar planta en vicuñitas
+d<-0.25#valor biomasa para el cual vicuña se mantiene sin crecer
+A<-0.15#como a pero para puma-vicuña, tasa consumo puma-vicuña
+B<-50#como b pero para puma-vicuña
+E<-2.3#como e pero para efectividad transformar vicuñas en pumitas
+D<-0.3 #como d pero para el puma
+
+#trayectoria
+p.tritr<-c(r=r,K=K,a=a,b=b,d=d,e=e,A=A,B=B,E=E,D=D)
+tiempo<-1000
+tritr1<-ode(c(50,50,50),1:tiempo,tritr,p.tritr)
+
+#
+Neq <- D*B/((A*E)-D)
+
+#grafico en el tiempo
+par(mfrow=c(3,1),mar=c(1,4,1,1))
+plot(1:tiempo,tritr1[,2],type="l",ylim=c(0,max(tritr1[,2])),ylab="veg")
+plot(1:tiempo,tritr1[,3],type="l",ylim=c(0,max(tritr1[,3])),ylab="vicuña")
+plot(1:tiempo,tritr1[,4],type="l",ylim=c(0,max(tritr1[,4])),ylab="puma")
+```
+
+# Parte C: Modelos de transmisión de microparásitos de transmisión directa
+
+## Modelo SEIR
+
+```{r}
+parameters <- c(b=0.01,f=0.75,z=0.1)
+n <- 1000
+state <- c(s=n-1,e=0,i=1,r=0)
+
+SEIR <- function(t,state,parameters) {with(as.list(c(state,parameters)),{ds<--b*s*i;de<-b*s*i-f*e;di<-f*e-z*i;dr<-z*i;list(c(ds,de,di,dr))})}
+tspan <- c(0:30)
+
+```
+
+```{r}
+library(deSolve)
+out <- ode(y=state,times=tspan,func=SEIR,parms=parameters)
+head(out)
+
+par(mai=c(0.4,0.5,0.6,0.2))
+plot(out,xlab="",ylab="",las=1)
+
+```
+
+```{r}
+par(mfrow=c(1,1),oma=c(1,1,1,1),mar=c(3,4,0,2),mgp=c(3,1,0))
+plot(out[,"time"],out[,"s"],col="green",type="l",las=1,xlab="",ylab="")
+lines(out[,"time"],out[,"e"],col="blue")
+lines(out[,"time"],out[,"i"],col="red")
+lines(out[,"time"],out[,"r"],col="black")
+
+```
+
+```{r}
+
+par(mfrow=c(1,1),oma=c(1,1,1,1),mar=c(3,4,0,2),mgp=c(3,1,0))
+plot(out[,"time"],out[,"s"],col="green",type="l",las=1,xlab="",ylab="")
+lines(out[,"time"],out[,"e"],col="blue")
+lines(out[,"time"],out[,"i"],col="red")
+lines(out[,"time"],out[,"r"],col="black")
+legend("right",c("S","E","I","R"),col=c(3,4,2,1),bty ="n",lty=c(1,1,1,1))
+```
+
+```{r}
+#SEIR NAC
+#Realizamos la especificación del modelo
+rm(list=ls())
+parameters <- c(b = 0.01,f = 0.75, z = 0.1, d=0.016)
+n=1000
+state <- c(s = n-1,e = 0,i = 1, r = 0)
+
+SEIRnac<-function(t, state, parameters) {with(as.list(c(state, parameters)),{ds <- d*(e+i+r)-b*s*i; de <- b*s*i-f*e-d*e; di <- f*e- z*i-d*i; dr <- z*i-d*r; list(c(ds, de, di, dr))})}
+tspan=c(0:30)
+
+#Ahora aplicamos el modelo
+library(deSolve)
+out <- ode(y = state, times = tspan, func = SEIRnac, parms = parameters)
+head(out)
+
+par(mfrow=c(1,1),oma=c(1,1,1,1),mar=c(3,4,0,2),mgp=c(3,1,0))
+plot(out[,"time"], out[, "s"], xlab = "time", ylab = "-", col="green", type="l")
+lines (out[,"time"], out[, "e"], xlab = "time", ylab = "-", col="blue")
+lines (out[,"time"], out[, "i"], xlab = "time", ylab = "-", col="red")
+lines (out[,"time"], out[, "r"], xlab = "time", ylab = "-", col="black")
+legend("right",c("S","E","I","R"),col=c(3,4,2,1),bty ="n",lty=c(1,1,1,1))
+
+```
+
+```{r}
+#SIR
+#Realizamos la especificación del modelo
+rm(list=ls())
+parameters <- c(b = 0.01, z = 0.1)
+n=1000
+state <- c(s = n-1,i = 1, r = 0)
+
+SIR<-function(t, state, parameters) {with(as.list(c(state, parameters)),{ds <- -b*s*i; di <- b*s*i- z*i; dr <- z*i; list(c(ds, di, dr))})}
+tspan=c(0:30)
+
+#Ahora aplicamos el modelo
+library(deSolve)
+out <- ode(y = state, times = tspan, func = SIR, parms = parameters)
+head(out)
+
+par(mfrow=c(1,1),oma=c(1,1,1,1),mar=c(3,4,0,2),mgp=c(3,1,0))
+plot(out[,"time"], out[, "s"], xlab = "time", ylab = "-", col="green", type="l")
+lines (out[,"time"], out[, "i"], xlab = "time", ylab = "-", col="red")
+lines (out[,"time"], out[, "r"], xlab = "time", ylab = "-", col="black")
+legend("right",c("S","I","R"),col=c(3,2,1),bty ="n",lty=c(1,1,1))
+
+```
+
+```{r}
+#SIRS N=100
+#Realizamos la especificación del modelo
+rm(list=ls())
+parameters <- c(b = 0.01, z = 1, p=0.01)
+n=100
+state <- c(s = n-1,i = 1, r = 0)
+
+SIRS<-function(t, state, parameters) {with(as.list(c(state, parameters)),{ds <- -b*s*i+p*r; di <- b*s*i- z*i; dr <- z*i-p*r; list(c(ds, di, dr))})}
+tspan=c(0:100)
+
+#Ahora aplicamos el modelo
+library(deSolve)
+out <- ode(y = state, times = tspan, func = SIRS, parms = parameters)
+head(out)
+plot(out, xlab = "time", ylab = "-")
+
+par(mfrow=c(1,1),oma=c(1,1,1,1),mar=c(3,4,0,2),mgp=c(3,1,0))
+plot(out[,"time"], out[, "s"], xlab = "time", ylab = "-", col="green", type="l",ylim=c(0,100))
+lines (out[,"time"], out[, "i"], xlab = "time", ylab = "-", col="red")
+lines (out[,"time"], out[, "r"], xlab = "time", ylab = "-", col="black")
+legend("right",c("S","I","R"),col=c(3,2,1),bty ="n",lty=c(1,1,1))
+abline(h=0,lty=3)
+
+```
+
