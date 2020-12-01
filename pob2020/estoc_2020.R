@@ -30,11 +30,11 @@ resultado
 #valor inicial? ¿Representaría esto el valor probable a futuro de la 
 #población? Esto puede verse utilizando el siguiente programa:
 
-N<-numeric(100)
-N[1]<-10
-tiempo<-99
-lbueno<-5/4 
-lmalo<-4/5
+N <- numeric(100)
+N[1] <- 10
+tiempo <- 99
+lbueno <- 5/4 
+lmalo <- 3/4
 
 #con el siguiente ciclo fabricamos la serie temporal
 #qué significa la condicion "runif"<0.5?
@@ -49,6 +49,8 @@ plot(c(1:100),N,pch=16,cex.axis=0.8,cex.lab=0.8,type="b",xlab="tiempo")
 # lambda cuya media geométrica es 1 (lbueno 5/4 y lmalo 4/5), con uno 
 #cuya media aritmética es 1 (lbueno 5/4 y lmalo 3/4). Cual es la media
 #geometrica en el último caso?
+gmean <- function(x) prod(x)^(1/length(x))
+
 
 #3)Para mirar qué ocurre con la varianza y la probabilidad de extinción
 #a lo largo del tiempo podemos repetir el ciclo muchas veces. Para 
@@ -58,7 +60,7 @@ plot(c(1:100),N,pch=16,cex.axis=0.8,cex.lab=0.8,type="b",xlab="tiempo")
 
 
 #código para superponer simulaciones
-plot(c(1:100),N,pch=16,cex.axis=0.8,cex.lab=0.8,type="n",xlab="tiempo",ylim=c(0,100))
+plot(c(1:100),N,pch=16,cex.axis=0.8,cex.lab=0.8,type="n",xlab="tiempo",ylim=c(0,300))
 for (j in 1:20){
   for (i in 1:tiempo){
     if(runif(1)<0.5){lambda<-lmalo} else {lambda<-lbueno}

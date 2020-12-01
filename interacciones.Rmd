@@ -142,8 +142,9 @@ LVmodif<- function(t, y, p) {
   P<-y[2]
   with(as.list(p), {
     dH.dt<-b*H*(1-alpha*H)-w*P*H/(D+H)
-    #dH.dt<-b*H*(1-alpha*H)-
+    #dH.dt<-b*H*(1-alpha*H)-a*P*H
     dP.dt<-e*w*P*H/(D+H)-s*P
+    #dP.dt<-e*a*P*H-s*P
     return(list(c(dH.dt, dP.dt)))
   })
 }
@@ -261,6 +262,7 @@ Neq <- D*B/((A*E)-D)
 par(mfrow=c(3,1),mar=c(1,4,1,1))
 plot(1:tiempo,tritr1[,2],type="l",ylim=c(0,max(tritr1[,2])),ylab="veg")
 plot(1:tiempo,tritr1[,3],type="l",ylim=c(0,max(tritr1[,3])),ylab="vicuña")
+abline(h=Neq,col="red")
 plot(1:tiempo,tritr1[,4],type="l",ylim=c(0,max(tritr1[,4])),ylab="puma")
 
 ```
@@ -290,6 +292,7 @@ Neq <- D*B/((A*E)-D)
 par(mfrow=c(3,1),mar=c(1,4,1,1))
 plot(1:tiempo,tritr1[,2],type="l",ylim=c(0,max(tritr1[,2])),ylab="veg")
 plot(1:tiempo,tritr1[,3],type="l",ylim=c(0,max(tritr1[,3])),ylab="vicuña")
+abline(h=Neq,col="red")
 plot(1:tiempo,tritr1[,4],type="l",ylim=c(0,max(tritr1[,4])),ylab="puma")
 
 
@@ -320,6 +323,7 @@ Neq <- D*B/((A*E)-D)
 par(mfrow=c(3,1),mar=c(1,4,1,1))
 plot(1:tiempo,tritr1[,2],type="l",ylim=c(0,max(tritr1[,2])),ylab="veg")
 plot(1:tiempo,tritr1[,3],type="l",ylim=c(0,max(tritr1[,3])),ylab="vicuña")
+abline(h=Neq,col="red")
 plot(1:tiempo,tritr1[,4],type="l",ylim=c(0,max(tritr1[,4])),ylab="puma")
 
 ```
@@ -349,6 +353,7 @@ Neq <- D*B/((A*E)-D)
 par(mfrow=c(3,1),mar=c(1,4,1,1))
 plot(1:tiempo,tritr1[,2],type="l",ylim=c(0,max(tritr1[,2])),ylab="veg")
 plot(1:tiempo,tritr1[,3],type="l",ylim=c(0,max(tritr1[,3])),ylab="vicuña")
+abline(h=Neq,col="red")
 plot(1:tiempo,tritr1[,4],type="l",ylim=c(0,max(tritr1[,4])),ylab="puma")
 ```
 
@@ -377,6 +382,7 @@ Neq <- D*B/((A*E)-D)
 par(mfrow=c(3,1),mar=c(1,4,1,1))
 plot(1:tiempo,tritr1[,2],type="l",ylim=c(0,max(tritr1[,2])),ylab="veg")
 plot(1:tiempo,tritr1[,3],type="l",ylim=c(0,max(tritr1[,3])),ylab="vicuña")
+abline(h=Neq,col="red")
 plot(1:tiempo,tritr1[,4],type="l",ylim=c(0,max(tritr1[,4])),ylab="puma")
 ```
 
@@ -498,3 +504,28 @@ abline(h=0,lty=3)
 
 ```
 
+```{r}
+#SIRS N=1000
+#Realizamos la especificación del modelo
+rm(list=ls())
+parameters <- c(b = 0.01, z = 1, p=0.01)
+n=1000
+state <- c(s = n-1,i = 1, r = 0)
+
+SIRS<-function(t, state, parameters) {with(as.list(c(state, parameters)),{ds <- -b*s*i+p*r; di <- b*s*i- z*i; dr <- z*i-p*r; list(c(ds, di, dr))})}
+tspan=c(0:100)
+
+#Ahora aplicamos el modelo
+library(deSolve)
+out <- ode(y = state, times = tspan, func = SIRS, parms = parameters)
+head(out)
+plot(out, xlab = "time", ylab = "-")
+
+par(mfrow=c(1,1),oma=c(1,1,1,1),mar=c(3,4,0,2),mgp=c(3,1,0))
+plot(out[,"time"], out[, "s"], xlab = "time", ylab = "-", col="green", type="l",ylim=c(0,1000))
+lines (out[,"time"], out[, "i"], xlab = "time", ylab = "-", col="red")
+lines (out[,"time"], out[, "r"], xlab = "time", ylab = "-", col="black")
+legend("right",c("S","I","R"),col=c(3,2,1),bty ="n",lty=c(1,1,1))
+abline(h=0,lty=3)
+
+```

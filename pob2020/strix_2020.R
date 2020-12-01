@@ -85,6 +85,7 @@ S
 # sensibilidad proporcional o elasticidad
 elas <- (A/lambda)*S
 elas
+
 # elasticidad canchera
 par(mfrow=c(1,1))
 elas[elas==0]<-NA
