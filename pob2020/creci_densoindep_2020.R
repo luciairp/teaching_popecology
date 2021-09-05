@@ -45,6 +45,8 @@ plot(c(1:10),log(Nd), xlab='tiempo')
 # que algunos autores denomina crecimiento proporcional
 plot(Nd[1:9],Nd[2:10]-Nd[1:9]) 
 
+# GRÁFICO 3bis: reclutamiento per cápita
+plot(Nd[1:9],(Nd[2:10]-Nd[1:9])/Nd[1:9]) 
 
 # Crecimiento continuo ----------------------------------------------------------------
 
@@ -82,4 +84,14 @@ plot(out[,1],out[,2],las=1,type='b',cex.axis=0.8)
 # GRÁFICO 5: graficamos el log de los valores en el eje y en el tiempo
 plot(out[,1],log(out[,2]),las=1,cex.axis=0.8,cex.lab=0.8,type='b')
 
+# GRÁFICO 6: reclutamiento neto
+plot(out[1:90,2],(out[2:91,2]-out[1:90,2]),pch=16,xlab="N",ylab="reclut neto per cap")
+
+# GRÁFICO 7: reclutamiento neto per cápita
+plot(out[1:90,2],(out[2:91,2]-out[1:90,2])/out[1:90,2],pch=16,xlab="N",ylab="reclut neto per cap")
+
+# GRÁFICO 8: superponemos discreto y continuo
+plot(out[,1],out[,2],las=1,type='b',cex.axis=0.8,pch=16,col=2,ylab="N",xlab="tiempo")
+points(c(1:10),Nd,pch=16,col=3)
+legend("topleft",c("continuo","discreto"),pch=16,col=c(2,3),bty="n")
 
