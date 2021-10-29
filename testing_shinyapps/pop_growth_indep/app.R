@@ -99,7 +99,8 @@ server <- function(input, output, session) {
                       percap = numeric(((input$tiempos-1)/0.1)+1),
                       logN = log(N))
       
-      for(a in 1:length(Ncent$N)) {Ncent$percap[a]<-(Ncent$N[a+1]-Ncent$N[a])/Ncent$N[a]}
+      for(a in 1:length(Ncent$N)) {Ncent$percap[a]<-((Ncent$N[a+1]-Ncent$N[a])/Ncent$N[a])/0.1}
+      
       Ncent <- Ncent[1:(length(Ncent$N)-1),]
       
       if (input$graphtypec == "D"){ 
@@ -125,6 +126,7 @@ server <- function(input, output, session) {
       geom_path(color = 'lightblue', linetype = 2 )+
       xlab("")+ylab("")+
       scale_y_continuous(expand = expansion(mult = 0, add = 2)) +
+      expand_limits(y = 0)+
       theme_minimal()
     print(p)
   })
